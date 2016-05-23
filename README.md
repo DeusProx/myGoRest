@@ -18,7 +18,7 @@ cd $GOPATH/src/github.com/DeusProx/myGoRest
 go install
 myGoRest
 ```
-* You can also check this official golang tutorial: [https://golang.org/doc/code.html]
+* You can also check this official golang [tutorial](https://golang.org/doc/code.html)
 
 ```
 Developed by
