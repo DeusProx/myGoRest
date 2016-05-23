@@ -12,9 +12,13 @@ func main() {
 	log.Printf("Start Server")
 
 	router := httprouter.New()
-	router.GET("/", index)
+
+	router.NotFound = http.FileServer(http.Dir("./static"))
+	router.GET("/root", index)
 	router.GET("/user/:username", user)
 	router.POST("/login", basicAuth(login))
+	router.GET("/private", tokenHandler(private))
+	router.GET("/websocket", websocketHandler)
 
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
@@ -29,8 +33,7 @@ func user(res http.ResponseWriter, req *http.Request, ps httprouter.Params) {
 	fmt.Fprintf(res, "Welcome %s!\n", ps.ByName("username"))
 }
 
-// curl -v -X POST --data '{"username": "userX", "password": "secret"}' 'http://localhost:8080/login'
-func login(res http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-	res.WriteHeader(http.StatusCreated)
-	fmt.Fprint(res, "LOGGED IN!\n")
+// curl -v -X GET -H "Token: testToken" 'http://localhost:8080/private'
+func private(res http.ResponseWriter, req *http.Request, ps httprouter.Params) {
+	fmt.Fprintf(res, "This resource is private and protected by a token\n")
 }

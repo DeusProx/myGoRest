@@ -4,13 +4,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
 )
 
-// Auth is a cool type Yo!
+// Auth contains the data for the authentication method
 type Auth struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -31,7 +32,24 @@ func basicAuth(handler httprouter.Handle) httprouter.Handle {
 		}
 
 		sEnc := base64.StdEncoding.EncodeToString([]byte(auth.Username))
-		res.Header().Set("token", sEnc)
+		res.Header().Set("Token", sEnc)
+		handler(res, req, ps)
+		return
+	}
+}
+
+func tokenHandler(handler httprouter.Handle) httprouter.Handle {
+	return func(res http.ResponseWriter, req *http.Request, ps httprouter.Params) {
+		var token string
+		if token = req.Header.Get("Token"); token == "" {
+			unauthorized(res, errors.New("No Token"))
+			return
+		}
+		if token != "testToken" {
+			unauthorized(res, errors.New("Wrong Token"))
+			return
+		}
+
 		handler(res, req, ps)
 		return
 	}
@@ -41,4 +59,10 @@ func unauthorized(res http.ResponseWriter, err error) {
 	log.Println("Error: ", err)
 	http.Error(res, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 	return
+}
+
+// curl -v -X POST --data '{"username": "userX", "password": "secret"}' 'http://localhost:8080/login'
+func login(res http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+	res.WriteHeader(http.StatusCreated)
+	fmt.Fprint(res, "LOGGED IN!\n")
 }
